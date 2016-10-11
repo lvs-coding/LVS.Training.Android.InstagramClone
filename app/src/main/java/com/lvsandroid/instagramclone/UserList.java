@@ -7,8 +7,6 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -25,7 +23,6 @@ import com.parse.ParseException;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -118,6 +115,7 @@ public class UserList extends AppCompatActivity {
                 } else {
 
                     Bitmap bitmapImage = MediaStore.Images.Media.getBitmap(this.getContentResolver(), selectedImage);
+                    Log.i("DBG","Permission ok");
                     //ImageView imageView = (ImageView) findViewById(R.id.imageView);
                     //imageView.setImageBitmap(bitmapImage);
                 }
@@ -127,5 +125,12 @@ public class UserList extends AppCompatActivity {
                 Log.e("ERROR",e.toString());
             }
         }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        // NOTE: delegate the permission handling to generated method
+        UserListPermissionsDispatcher.onRequestPermissionsResult(this, requestCode, grantResults);
     }
 }
