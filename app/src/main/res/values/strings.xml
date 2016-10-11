@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">Instagram clone</string>
+    <string name="action_settings">Settings</string>
+
+    <string name="log_in">Log In</string>
+    <string name="sign_up">Sign Up</string>
+
+    <string name="msg_username_blank">Username cannot be blank</string>
+    <string name="msg_password_blank">Password cannot be blank</string>
+    <string name="msg_login_failed">Login failed</string>
+    <string name="msg_sign_up_failed">Sign up failed</string>
+    <string name="msg_user_exists">User {0} already exists</string>
+
+    <string name="log_can_t_get_users">Can\'t get users list</string>
+    <string name="title_activity_user_list">UserList</string>
+</resources>
