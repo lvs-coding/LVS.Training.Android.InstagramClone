@@ -14,15 +14,22 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.parse.FindCallback;
+import com.parse.ParseACL;
 import com.parse.ParseException;
+import com.parse.ParseFile;
+import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
+import com.parse.SaveCallback;
 
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,15 +49,25 @@ public class UserList extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+
+        //=== List of users
         userNames = new ArrayList<>();
         arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1,userNames);
-
         final ListView usersList = (ListView) findViewById(R.id.usersList);
 
+        usersList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int index, long l) {
+                Intent intent = new Intent(getApplicationContext(),UserFeed.class);
+                String userName = userNames.get(index);
+                intent.putExtra("userName",userName);
+                startActivity(intent);
+            }
+        });
 
-        ParseUser currentUser = ParseUser.getCurrentUser();
 
         //=== Get users list
+        ParseUser currentUser = ParseUser.getCurrentUser();
         ParseQuery<ParseUser> query = ParseUser.getQuery();
         query.whereNotEqualTo("username", currentUser.getUsername())
                 .addAscendingOrder("username")
@@ -95,6 +112,11 @@ public class UserList extends AppCompatActivity {
             startActivityForResult(i,1);
             return true;
         }
+        if (id == R.id.logout) {
+            ParseUser.logOut();
+            Intent intent = new Intent(getApplicationContext(),MainActivity.class);
+            startActivity(intent);
+        }
 
         return super.onOptionsItemSelected(item);
     }
@@ -109,19 +131,45 @@ public class UserList extends AppCompatActivity {
             Uri selectedImage = data.getData();
 
             try {
+                // Check permission access to storage
                 if (ActivityCompat.checkSelfPermission(UserList.this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
                 {
                     UserListPermissionsDispatcher.onActivityResultWithCheck(this,requestCode,resultCode,data);
                 } else {
 
                     Bitmap bitmapImage = MediaStore.Images.Media.getBitmap(this.getContentResolver(), selectedImage);
-                    Log.i("DBG","Permission ok");
-                    //ImageView imageView = (ImageView) findViewById(R.id.imageView);
-                    //imageView.setImageBitmap(bitmapImage);
+
+                    ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                    bitmapImage.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                    byte[] byteArray = stream.toByteArray();
+
+                    ParseFile file = new ParseFile("image.png",byteArray);
+
+                    ParseObject object = new ParseObject("Images");
+                    object.put("username",ParseUser.getCurrentUser().getUsername());
+                    object.put("image",file);
+
+                    // Set image public
+                    ParseACL acl=new ParseACL();
+                    acl.setPublicReadAccess(true);
+                    object.setACL(acl);
+
+                    // Save image in DB
+                    object.saveInBackground(new SaveCallback() {
+                        @Override
+                        public void done(ParseException e) {
+                            if(e == null) {
+                                Toast.makeText(getApplication().getBaseContext(),"Your image has been posted",Toast.LENGTH_LONG).show();
+                            } else {
+                                Toast.makeText(getApplication().getBaseContext(),"There was an error, please try again",Toast.LENGTH_LONG).show();
+                                Log.e("ERROR",e.toString());
+                            }
+                        }
+                    });
                 }
 
-
             } catch (Exception e) {
+                Toast.makeText(getApplication().getBaseContext(),"There was an error, please try again",Toast.LENGTH_LONG).show();
                 Log.e("ERROR",e.toString());
             }
         }
